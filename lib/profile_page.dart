@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mon_profil/profile.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -20,6 +23,9 @@ class ProfilePageState extends State<ProfilePage> {
     "Coding": false,
     "Reading": false,
   };
+
+  ImagePicker picker = ImagePicker();
+  File? imageFile;
 
   @override
   void initState() {
@@ -46,6 +52,7 @@ class ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    double imageSize = MediaQuery.of(context).size.width / 4;
     // TODO: implement build
     return Scaffold(
       appBar: AppBar(
@@ -65,9 +72,24 @@ class ProfilePageState extends State<ProfilePage> {
               child: Column(
                 children: [
                   Text(myProfile.setName()),
-                  Text("Age: ${myProfile.setAge()}"),
-                  Text("Taille: ${myProfile.setHeight()}"),
-                  Text("Gender: ${myProfile.genderString()}"),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: MediaQuery.of(context).size.width / 3.5,
+                        child: (imageFile == null)
+                            ? Image.network("https://codabee.com/wp-content/uploads/2018/03/cropped-Artboard-2.png")
+                            : Image.file(imageFile!, height:imageSize, width:imageSize),
+                      ),
+                      Column(
+                        children: [
+                          Text("Age: ${myProfile.setAge()}"),
+                          Text("Taille: ${myProfile.setHeight()}"),
+                          Text("Gender: ${myProfile.genderString()}"),
+                        ],
+                      ),
+                    ],
+                  ),
                   Text("Hobbies: ${myProfile.setHobbies()}"),
                   Text(
                       "Favorite programming language: ${myProfile.favoriteLang}"),
@@ -82,13 +104,32 @@ class ProfilePageState extends State<ProfilePage> {
               ),
             ),
           ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              IconButton(
+                onPressed: (() => getImage(source: ImageSource.camera)),
+                icon: Icon(Icons.camera_alt_rounded),
+                color: Colors.blueGrey,
+              ),
+              IconButton(
+                onPressed: (() => getImage(source: ImageSource.gallery)),
+                icon: Icon(Icons.photo_album_outlined),
+                color: Colors.blueGrey,
+              )
+            ],
+          ),
           const Divider(color: Colors.blueGrey, thickness: 2),
           myTitle("Edit info"),
           myTextField(controller: firstname, hint: "Enter your first name"),
           myTextField(controller: lastname, hint: "Enter your last name"),
           myTextField(
               controller: secret, hint: "Tell me a secret", isSecret: true),
-          myTextField(controller: age, hint: "Enter your age", type: TextInputType.number),
+          myTextField(
+              controller: age,
+              hint: "Enter your age",
+              type: TextInputType.number),
           Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -159,7 +200,8 @@ class ProfilePageState extends State<ProfilePage> {
   TextField myTextField(
       {required TextEditingController controller,
       required String hint,
-      bool isSecret = false, TextInputType type= TextInputType.text}) {
+      bool isSecret = false,
+      TextInputType type = TextInputType.text}) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
@@ -234,9 +276,7 @@ class ProfilePageState extends State<ProfilePage> {
     return Column(
       children: [
         myTitle("My Favorite Language"),
-        Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: w),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: w),
       ],
     );
   }
@@ -248,5 +288,17 @@ class ProfilePageState extends State<ProfilePage> {
           fontWeight: FontWeight.bold,
           fontSize: 20,
         ));
+  }
+
+  Future getImage({required ImageSource source}) async {
+    final chosenFile = await picker.getImage(source: source);
+
+    setState(() {
+      if (chosenFile == null) {
+        print('nothing to add');
+      } else {
+        imageFile = File(chosenFile.path);
+      }
+    });
   }
 }
